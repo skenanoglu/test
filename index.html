@@ -12,13 +12,16 @@
   .ekran h1 { font-size: 56px; margin: 0; }
   .ekran p { font-size: 18px; margin: 0; color: #555; }
   button { font-size: 22px; padding: 12px 32px; border: 2px solid #000; background: #fff; color: #000; border-radius: 12px; }
-  #son h1 { color: #e0245e; font-size: 48px; }
+  #son h1 { color: #e0245e; font-size: 40px; }
+  #butonlar { display: flex; gap: 16px; }
+  #hayir { transition: left .15s, top .15s; }
+  #cevap { font-size: 24px; color: #e0245e; min-height: 30px; }
   .gizli { display: none; }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="hud"><span id="skor">🐍 0</span><span id="sure">3:00</span></div>
+<div id="hud"><span id="skor">🐍 0</span><span id="sure">0:30</span></div>
 
 <div id="giris" class="ekran">
   <p>Tavuğu parmağınla sürükle, yılanları ye! 🐔</p>
@@ -26,14 +29,14 @@
 </div>
 
 <div id="son" class="ekran gizli">
-  <h1>Seni seviyorum ❤️</h1>
-  <p id="sonSkor"></p>
-  <button id="tekrar">Tekrar oyna</button>
+  <h1>Kocişin seni çok seviyor, biliyor muydun? ❤️</h1>
+  <div id="butonlar"><button id="evet">Evet</button><button id="hayir">Hayır</button></div>
+  <p id="cevap"></p>
 </div>
 
 <script>
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
-const SURE = 180; // saniye
+const SURE = 30; // saniye
 let W, H, tavuk, hedef, yilanlar = [], skor = 0, kalan = SURE, son, oynuyor = false, eklemeSayac;
 
 function boyut() {
@@ -50,7 +53,7 @@ function yeniYilan() {
   do { x = 20 + Math.random() * (W - 40); y = 60 + Math.random() * (H - 80); }
   while (Math.hypot(x - tavuk.x, y - tavuk.y) < 150);
   const a = Math.random() * Math.PI * 2;
-  const hiz = 40 + Math.random() * 40 + (SURE - kalan) * 0.4; // zamanla hızlanır
+  const hiz = 40 + Math.random() * 40 + (SURE - kalan) * 2; // zamanla hızlanır
   return { x, y, vx: Math.cos(a) * hiz, vy: Math.sin(a) * hiz, t: Math.random() * 6 };
 }
 
@@ -68,7 +71,6 @@ function baslat() {
 
 function bitir() {
   oynuyor = false;
-  document.getElementById('sonSkor').textContent = skor + ' yılan yedin 🐔';
   document.getElementById('son').classList.remove('gizli');
 }
 
@@ -107,9 +109,9 @@ function dongu(simdi) {
     if (y.y < 60 || y.y > H - 20) { y.vy *= -1; y.y = Math.max(60, Math.min(H - 20, y.y)); }
     if (d < 40) { yilanlar.splice(i, 1); skor++; }
   }
-  // Yılan sayısı her 30 saniyede bir artar
+  // Yılan sayısı her 6 saniyede bir artar
   eklemeSayac += dt;
-  const maks = 4 + Math.floor((SURE - kalan) / 30);
+  const maks = 4 + Math.floor((SURE - kalan) / 6);
   if (yilanlar.length < maks && eklemeSayac > 1) { yilanlar.push(yeniYilan()); eklemeSayac = 0; }
 
   ciz();
@@ -132,7 +134,24 @@ function ciz() {
 }
 
 document.getElementById('basla').onclick = baslat;
-document.getElementById('tekrar').onclick = baslat;
+document.getElementById('evet').onclick = () => {
+  document.getElementById('cevap').textContent = 'Bi de Hayır\'ı dene de 😏';
+};
+// Hayır'a basılamaz: parmak ya da fare yaklaşınca başka yere kaçar
+const hayir = document.getElementById('hayir');
+function kac(e) {
+  e.preventDefault();
+  const r = hayir.getBoundingClientRect();
+  let x, y;
+  do { x = 16 + Math.random() * (innerWidth - r.width - 32); y = 16 + Math.random() * (innerHeight - r.height - 32); }
+  while (Math.hypot(x - r.left, y - r.top) < 120);
+  hayir.style.position = 'fixed';
+  hayir.style.left = x + 'px'; hayir.style.top = y + 'px';
+}
+hayir.addEventListener('touchstart', kac, { passive: false });
+hayir.addEventListener('mousedown', kac);
+hayir.addEventListener('mouseenter', kac);
+hayir.addEventListener('click', e => e.preventDefault());
 </script>
 </body>
 </html>
